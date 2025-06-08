@@ -1,84 +1,78 @@
 #include <lpc213x.h>
 
-#define RS (1 << 8) 
-#define EN (1 << 9)  
-
 void delay(void);
-void lcd_cmd(unsigned char cmd);
-void lcd_data(unsigned char data);
-void lcd_init(void);
+void lcd(unsigned char a, int b);
 char keypad(void);
-void lcd_string(const char *str);
+char c;
 
 int main(void)
 {
-    PINSEL0 = 0x00000000;  // P0 as GPIO
-    PINSEL1 = 0x00000000;  // P0.16–P0.31 as GPIO
-    PINSEL2 = 0x00000000;  // P1 as GPIO
+    PINSEL0 = PINSEL2 = 0x0;
+    IODIR0 = 0x00000F00;      
+    IODIR1 = 0x00000000;       
 
-    IODIR0 = 0x000000FF;   // P0.0 to P0.7 as output (LCD data)
-    IODIR1 |= RS | EN | (1 << 19) | (1 << 20) | (1 << 21) | (1 << 22); 
-    IODIR1 &= ~((1 << 16) | (1 << 17) | (1 << 18)); 
-
-    lcd_init();
-
-    lcd_string("Keypad Ready");
+    lcd(0x38, 0);
+    lcd(0x0E, 0);
+    lcd(0x01, 0);
+    lcd(0x06, 0);
+    lcd(0x80, 0);
 
     while (1)
     {
-        char key = keypad();
-        lcd_cmd(0x01);       
-        lcd_cmd(0x80);        
-        lcd_data(key);      
-        delay();
+        c = keypad();
+        lcd(c, 1);
     }
 }
 
-void lcd_init(void)
+void lcd(unsigned char a, int b)
 {
-    lcd_cmd(0x38);  
-    lcd_cmd(0x0E); 
-    lcd_cmd(0x01);  
-    lcd_cmd(0x06);  
-    lcd_cmd(0x80);  
-}
+    IOCLR1 = 1 << 8;       
+    if (b == 1)
+        IOSET1 = 1 << 8;   
 
-void lcd_cmd(unsigned char cmd)
-{
-    IOCLR1 = RS;          
-    IOCLR0 = 0xFF;        
-    IOSET0 = cmd;          
-    IOSET1 = EN;           
+    IOSET0 = a << 0;
+    IOSET1 = 1 << 9;      
     delay();
-    IOCLR1 = EN;          
-}
-
-void lcd_data(unsigned char data)
-{
-    IOSET1 = RS;           
-    IOCLR0 = 0xFF;     
-    IOSET0 = data;     
-    IOSET1 = EN;           
-    delay();
-    IOCLR1 = EN;           
-    IOCLR1 = RS;          
-}
-
-void lcd_string(const char *str)
-{
-    while (*str)
-    {
-        lcd_data(*str++);
-    }
+    IOCLR1 = 1 << 9;       
+    IOCLR0 = a << 0;
 }
 
 char keypad(void)
 {
     while (1)
     {
-        // ROW 1
-        IOCLR1 = (1 << 19);
-        IOSET1 = (1 << 20) | (1 << 21) | (1 << 22);
+        
+        IOCLR1 = (1 << 21) | (1 << 22);
+        IOSET1 = (1 << 19) | (1 << 20);
         if (!(IOPIN1 & (1 << 16))) { while (!(IOPIN1 & (1 << 16))); return '1'; }
         if (!(IOPIN1 & (1 << 17))) { while (!(IOPIN1 & (1 << 17))); return '2'; }
-        if (!(IOPIN1 & (1 << 18)))
+        if (!(IOPIN1 & (1 << 18))) { while (!(IOPIN1 & (1 << 18))); return '3'; }
+
+       
+        IOCLR1 = (1 << 19) | (1 << 22);
+        IOSET1 = (1 << 20) | (1 << 21);
+        if (!(IOPIN1 & (1 << 16))) { while (!(IOPIN1 & (1 << 16))); return '4'; }
+        if (!(IOPIN1 & (1 << 17))) { while (!(IOPIN1 & (1 << 17))); return '5'; }
+        if (!(IOPIN1 & (1 << 18))) { while (!(IOPIN1 & (1 << 18))); return '6'; }
+
+       
+        IOCLR1 = (1 << 19) | (1 << 20);
+        IOSET1 = (1 << 21) | (1 << 22);
+        if (!(IOPIN1 & (1 << 16))) { while (!(IOPIN1 & (1 << 16))); return '7'; }
+        if (!(IOPIN1 & (1 << 17))) { while (!(IOPIN1 & (1 << 17))); return '8'; }
+        if (!(IOPIN1 & (1 << 18))) { while (!(IOPIN1 & (1 << 18))); return '9'; }
+
+       
+        IOCLR1 = (1 << 20) | (1 << 21);
+        IOSET1 = (1 << 19) | (1 << 22);
+        if (!(IOPIN1 & (1 << 16))) { while (!(IOPIN1 & (1 << 16))); return '*'; }
+        if (!(IOPIN1 & (1 << 17))) { while (!(IOPIN1 & (1 << 17))); return '0'; }
+        if (!(IOPIN1 & (1 << 18))) { while (!(IOPIN1 & (1 << 18))); return '#'; }
+    }
+}
+
+void delay(void)
+{
+    unsigned int i;
+    for (i = 0; i < 20000; i++);
+}
