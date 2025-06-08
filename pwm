@@ -1,0 +1,21 @@
+#include <LPC213x.h>
+
+void PWM_Init(void)
+{
+   PINSEL0=0X80002;
+   PWMPCR=0X600;
+   PWMMR0=150000;
+   PWMTCR=0X09;
+   PWMMCR=0X02;
+}
+
+int main (void)
+{
+   PWM_Init();
+   while(1)
+   {
+      PWMMR1=75000;
+      PWMMR2=100000;
+      PWMLER=0X6;
+   }
+}
