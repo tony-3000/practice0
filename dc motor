@@ -1,0 +1,40 @@
+#include <LPC213x.h>
+
+#define motorstop  0x00
+#define motorclk   0x01  
+#define motoraclk  0x02  
+
+void delay(int k) {
+    unsigned int i, j;
+    for (i = 0; i < k; i++)
+        for (j = 0; j < 10000; j++);
+}
+
+int main(void) {
+    PINSEL0 = 0x00000000;
+    IODIR0 = 0x00000003;    
+    IOCLR0 = 0x00000003;    
+
+    while (1) {
+        
+        IOCLR0 = 0x03;
+        IOSET0 = motorclk;
+        delay(100);
+
+        IOCLR0 = 0x03;
+        delay(10);
+
+       
+        IOSET0 = motorclk;
+        delay(100);
+
+        
+        IOCLR0 = 0x03;
+        IOSET0 = motoraclk;
+        delay(100);
+
+        
+        IOCLR0 = 0x03;
+        delay(10);
+    }
+}
