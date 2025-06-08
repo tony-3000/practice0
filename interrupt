@@ -1,0 +1,55 @@
+#include <LPC213x.h>
+
+#define LED_PIN     (1<<10)
+#define BUTTON_PIN  (1<<14)
+
+void InitGPIO(void);
+void InitExtInterrupt(void);
+void delay_ms(unsigned int ms);
+void EINT1_IRQHandler(void);
+
+int main(void) {
+    InitGPIO();
+    InitExtInterrupt();
+
+    while(1) {
+        
+    }
+}
+
+void InitGPIO(void) {
+    IO0DIR |= LED_PIN;  
+    IO0CLR = LED_PIN;    
+}
+
+void InitExtInterrupt(void) {
+    PINSEL0 |= (1<<29);        
+
+    EXTMODE |= (1<<1);         
+    EXTPOLAR &= ~(1<<1);      
+
+    VICIntSelect &= ~(1<<15);  
+    VICVectCntl1 = (1<<5) | 15;       
+    VICVectAddr1 = (unsigned long)EINT1_IRQHandler;
+    VICIntEnable = (1<<15);   
+}
+
+void EINT1_IRQHandler(void) {
+    if(IO0PIN & LED_PIN) {
+        IO0CLR = LED_PIN;  
+    } else {
+        IO0SET = LED_PIN; 
+    }
+
+    EXTINT = (1<<1);       
+    VICVectAddr = 0;       
+}
+
+void delay_ms(unsigned int ms) {
+    unsigned int i, j;
+    for(i=0; i<ms; i++) {
+        for(j=0; j<20000; j++) {
+            _asm_("nop");
+        }
+    }
+}
