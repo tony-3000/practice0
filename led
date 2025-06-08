@@ -1,0 +1,26 @@
+#include <LPC213x.h>
+
+void delay() {
+    unsigned int i;
+    for (i = 0; i < 18000; i++);
+}
+
+int main() {
+    int led = 0x00000001;
+    int j;
+
+    PINSEL0 = 0x00000000;    
+    IODIR0 = 0x0000000F;     
+
+    IOCLR0 = 0x0000000F;    
+
+    while (1) {
+        for (j = 0; j < 4; j++) {
+            IOSET0 = led << j;   
+            delay();
+            IOCLR0 = led << j;  
+        }
+    }
+
+    return 0;  
+}
